@@ -1,0 +1,65 @@
+Package: opencv4
+Version: 4.7.0
+Port-Version: 6
+Depends: vcpkg-cmake, vcpkg-cmake-config, vcpkg-get-python-packages, zlib
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 88c02f177fb9dff77555960014855941ac22e4fd8c363a40c0b4dd8ffd31bf36
+Description: computer vision library
+Default-Features: default-features
+
+Package: opencv4
+Feature: contrib
+Depends: hdf5, tesseract
+Architecture: x64-windows
+Multi-Arch: same
+Description: opencv_contrib module
+
+Package: opencv4
+Feature: default-features
+Depends: opencv4
+Architecture: x64-windows
+Multi-Arch: same
+Description: Platform-dependent default features
+
+Package: opencv4
+Feature: dnn
+Depends: protobuf
+Architecture: x64-windows
+Multi-Arch: same
+Description: Enable dnn module
+
+Package: opencv4
+Feature: jpeg
+Depends: libjpeg-turbo
+Architecture: x64-windows
+Multi-Arch: same
+Description: JPEG support for opencv
+
+Package: opencv4
+Feature: png
+Depends: libpng
+Architecture: x64-windows
+Multi-Arch: same
+Description: PNG support for opencv
+
+Package: opencv4
+Feature: quirc
+Depends: quirc
+Architecture: x64-windows
+Multi-Arch: same
+Description: Enable QR code module
+
+Package: opencv4
+Feature: tiff
+Depends: tiff
+Architecture: x64-windows
+Multi-Arch: same
+Description: TIFF support for opencv
+
+Package: opencv4
+Feature: webp
+Depends: libwebp
+Architecture: x64-windows
+Multi-Arch: same
+Description: WebP support for opencv

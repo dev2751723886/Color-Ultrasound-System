@@ -1,0 +1,131 @@
+2026-09-17 22:15:08,238 - aqt.helper - DEBUG - helper 28016 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt5_5152/Updates.xml.sha256
+2026-09-17 22:15:13,329 - aqt.helper - DEBUG - helper 28016 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt5_5152_wasm/Updates.xml.sha256
+2026-09-17 22:15:38,435 - aqt.helper - DEBUG - helper 14664 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt5_5152/Updates.xml.sha256
+2026-09-17 22:16:03,001 - aqt.helper - DEBUG - helper 23044 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt5_5152/Updates.xml.sha256
+2026-09-17 22:17:07,676 - aqt.main - INFO - installer 30092 aqtinstall(aqt) v3.3.0 on Python 3.12.2 [CPython MSC v.1937 64 bit (AMD64)]
+2026-09-17 22:17:07,677 - aqt.helper - DEBUG - helper 30092 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt5_5152/Updates.xml.sha256
+2026-09-17 22:17:12,632 - aqt.main - ERROR - installer 30092 The packages ['qttools'] were not found while parsing XML of package information!
+==============================Suggested follow-up:==============================
+* Please use 'aqt list-qt windows desktop --modules 5.15.2 <arch>' to show modules available.
+2026-09-17 22:19:40,214 - aqt.main - INFO - installer 2404 aqtinstall(aqt) v3.3.0 on Python 3.12.2 [CPython MSC v.1937 64 bit (AMD64)]
+2026-09-17 22:19:40,216 - aqt.helper - DEBUG - helper 2404 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt5_5152/Updates.xml.sha256
+2026-09-17 22:19:44,869 - aqt.installer - INFO - installer 2404 DRY RUN: Would download and install the following:
+2026-09-17 22:19:44,869 - aqt.installer - INFO - installer 2404   - qtbase: online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qtbase-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
+2026-09-17 22:19:44,870 - aqt.installer - INFO - installer 2404   - qtconnectivity: online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qtconnectivity-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
+2026-09-17 22:19:44,870 - aqt.installer - INFO - installer 2404   - qtactiveqt: online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qtactiveqt-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
+2026-09-17 22:19:44,870 - aqt.installer - INFO - installer 2404   - qtmultimedia: online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qtmultimedia-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
+2026-09-17 22:19:44,870 - aqt.installer - INFO - installer 2404   - qttranslations: online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qttranslations-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
+2026-09-17 22:19:44,870 - aqt.installer - INFO - installer 2404   - qtgraphicaleffects: online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qtgraphicaleffects-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
+2026-09-17 22:19:44,870 - aqt.installer - INFO - installer 2404   - qtsvg: online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qtsvg-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
+2026-09-17 22:19:44,870 - aqt.installer - INFO - installer 2404   - qtdeclarative: online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qtdeclarative-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
+2026-09-17 22:19:44,870 - aqt.installer - INFO - installer 2404   - qtwinextras: online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qtwinextras-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
+2026-09-17 22:19:44,872 - aqt.installer - INFO - installer 2404   - qtimageformats: online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qtimageformats-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
+2026-09-17 22:19:44,872 - aqt.installer - INFO - installer 2404   - qttools: online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qttools-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
+2026-09-17 22:19:44,872 - aqt.installer - INFO - installer 2404   - qtxmlpatterns: online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qtxmlpatterns-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
+2026-09-17 22:19:44,872 - aqt.installer - INFO - installer 2404   - qtsensors: online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qtsensors-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
+2026-09-17 22:19:44,872 - aqt.installer - INFO - installer 2404   - qtwebsockets: online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qtwebsockets-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
+2026-09-17 22:19:44,872 - aqt.installer - INFO - installer 2404   - qtwebchannel: online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qtwebchannel-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
+2026-09-17 22:19:44,872 - aqt.installer - INFO - installer 2404   - qtlocation: online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qtlocation-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
+2026-09-17 22:19:44,872 - aqt.installer - INFO - installer 2404   - qtserialport: online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qtserialport-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
+2026-09-17 22:19:44,872 - aqt.installer - INFO - installer 2404   - qtquickcontrols: online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qtquickcontrols-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
+2026-09-17 22:19:44,872 - aqt.installer - INFO - installer 2404   - qtquickcontrols2: online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qtquickcontrols2-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
+2026-09-17 22:19:44,872 - aqt.installer - INFO - installer 2404   - qt3d: online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qt3d-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
+2026-09-17 22:19:44,872 - aqt.installer - INFO - installer 2404   - qtwebview: online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qtwebview-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
+2026-09-17 22:19:44,872 - aqt.installer - INFO - installer 2404   - qtserialbus: online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qtserialbus-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
+2026-09-17 22:19:44,872 - aqt.installer - INFO - installer 2404   - qtscxml: online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qtscxml-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
+2026-09-17 22:19:44,872 - aqt.installer - INFO - installer 2404   - qtgamepad: online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qtgamepad-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
+2026-09-17 22:19:44,873 - aqt.installer - INFO - installer 2404   - qtspeech: online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qtspeech-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
+2026-09-17 22:19:44,873 - aqt.installer - INFO - installer 2404   - qtremoteobjects: online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qtremoteobjects-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
+2026-09-17 22:19:44,873 - aqt.installer - INFO - installer 2404   - d3dcompiler_47: online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602d3dcompiler_47-x64.7z
+2026-09-17 22:19:44,873 - aqt.installer - INFO - installer 2404   - opengl32sw: online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602opengl32sw-64-mesa_12_0_rc2.7z
+2026-09-17 22:19:44,873 - aqt.installer - INFO - installer 2404 Total packages: 28
+2026-09-17 22:23:34,769 - aqt.main - INFO - installer 25656 aqtinstall(aqt) v3.3.0 on Python 3.12.2 [CPython MSC v.1937 64 bit (AMD64)]
+2026-09-17 22:23:34,771 - aqt.helper - DEBUG - helper 25656 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt5_5152/Updates.xml.sha256
+2026-09-17 22:23:39,846 - aqt.installer - INFO - installer 25656 DRY RUN: Would download and install the following:
+2026-09-17 22:23:39,847 - aqt.installer - INFO - installer 25656   - qtbase: online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qtbase-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
+2026-09-17 22:23:39,847 - aqt.installer - INFO - installer 25656 Total packages: 1
+2026-09-17 22:24:15,915 - aqt.main - INFO - installer 29460 aqtinstall(aqt) v3.3.0 on Python 3.12.2 [CPython MSC v.1937 64 bit (AMD64)]
+2026-09-17 22:24:15,916 - aqt.helper - DEBUG - helper 29460 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt5_5152/Updates.xml.sha256
+2026-09-17 22:24:23,606 - aqt.helper - DEBUG - helper 35536 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qtbase-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z.sha256
+2026-09-17 22:24:25,894 - aqt.helper - INFO - helper 35536 Downloading qtbase...
+2026-09-17 22:24:25,895 - aqt.installer - DEBUG - installer 35536 Download URL: https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qtbase-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
+2026-09-17 22:24:28,415 - aqt.helper - DEBUG - helper 35536 Asked to redirect(302) to: https://qtproject.mirror.liquidtelecom.com/online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qtbase-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
+2026-09-17 22:24:28,415 - aqt.helper - INFO - helper 35536 Redirected: qtproject.mirror.liquidtelecom.com
+2026-09-17 22:25:46,567 - aqt.installer - INFO - installer 35536 Finished installation of qtbase-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z in 82.96684600
+2026-09-17 22:25:47,570 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\bin\qmake.exe
+2026-09-17 22:25:47,597 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\libEGL.prl
+2026-09-17 22:25:47,617 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\libEGLd.prl
+2026-09-17 22:25:47,642 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\libGLESv2.prl
+2026-09-17 22:25:47,672 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\libGLESv2d.prl
+2026-09-17 22:25:47,700 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5AccessibilitySupport.prl
+2026-09-17 22:25:47,729 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5AccessibilitySupportd.prl
+2026-09-17 22:25:47,751 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5Bootstrap.prl
+2026-09-17 22:25:47,779 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5Concurrent.prl
+2026-09-17 22:25:47,824 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5Concurrentd.prl
+2026-09-17 22:25:47,855 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5Core.prl
+2026-09-17 22:25:47,881 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5Cored.prl
+2026-09-17 22:25:47,912 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5DBus.prl
+2026-09-17 22:25:47,942 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5DBusd.prl
+2026-09-17 22:25:47,969 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5DeviceDiscoverySupport.prl
+2026-09-17 22:25:48,012 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5DeviceDiscoverySupportd.prl
+2026-09-17 22:25:48,044 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5EdidSupport.prl
+2026-09-17 22:25:48,079 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5EdidSupportd.prl
+2026-09-17 22:25:48,113 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5EglSupport.prl
+2026-09-17 22:25:48,150 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5EglSupportd.prl
+2026-09-17 22:25:48,188 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5EventDispatcherSupport.prl
+2026-09-17 22:25:48,220 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5EventDispatcherSupportd.prl
+2026-09-17 22:25:48,248 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5FbSupport.prl
+2026-09-17 22:25:48,282 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5FbSupportd.prl
+2026-09-17 22:25:48,312 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5FontDatabaseSupport.prl
+2026-09-17 22:25:48,346 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5FontDatabaseSupportd.prl
+2026-09-17 22:25:48,375 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5Gui.prl
+2026-09-17 22:25:48,400 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5Guid.prl
+2026-09-17 22:25:48,422 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5Network.prl
+2026-09-17 22:25:48,452 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5Networkd.prl
+2026-09-17 22:25:48,478 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5OpenGL.prl
+2026-09-17 22:25:48,507 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5OpenGLd.prl
+2026-09-17 22:25:48,542 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5OpenGLExtensions.prl
+2026-09-17 22:25:48,570 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5OpenGLExtensionsd.prl
+2026-09-17 22:25:48,601 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5PlatformCompositorSupport.prl
+2026-09-17 22:25:48,632 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5PlatformCompositorSupportd.prl
+2026-09-17 22:25:48,665 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5PrintSupport.prl
+2026-09-17 22:25:48,700 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5PrintSupportd.prl
+2026-09-17 22:25:48,735 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5Sql.prl
+2026-09-17 22:25:48,764 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5Sqld.prl
+2026-09-17 22:25:48,791 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5Test.prl
+2026-09-17 22:25:48,819 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5Testd.prl
+2026-09-17 22:25:48,854 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5ThemeSupport.prl
+2026-09-17 22:25:48,890 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5ThemeSupportd.prl
+2026-09-17 22:25:48,919 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5VulkanSupport.prl
+2026-09-17 22:25:48,951 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5VulkanSupportd.prl
+2026-09-17 22:25:48,989 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5Widgets.prl
+2026-09-17 22:25:49,015 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5Widgetsd.prl
+2026-09-17 22:25:49,040 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5WindowsUIAutomationSupport.prl
+2026-09-17 22:25:49,069 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5WindowsUIAutomationSupportd.prl
+2026-09-17 22:25:49,101 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5Xml.prl
+2026-09-17 22:25:49,129 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\Qt5Xmld.prl
+2026-09-17 22:25:49,161 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\qtfreetype.prl
+2026-09-17 22:25:49,190 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\qtfreetyped.prl
+2026-09-17 22:25:49,226 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\qtlibpng.prl
+2026-09-17 22:25:49,253 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\qtlibpngd.prl
+2026-09-17 22:25:49,280 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\qtmain.prl
+2026-09-17 22:25:49,311 - aqt.updater - INFO - updater 29460 Patching D:\Qt5152\5.15.2\msvc2019_64\lib\qtmaind.prl
+2026-09-17 22:25:49,343 - aqt.main - INFO - installer 29460 Finished installation
+2026-09-17 22:25:49,343 - aqt.main - INFO - installer 29460 Time elapsed: 93.42874940 second
+2026-09-17 22:33:08,903 - aqt.main - INFO - installer 29276 aqtinstall(aqt) v3.3.0 on Python 3.12.2 [CPython MSC v.1937 64 bit (AMD64)]
+2026-09-17 22:33:08,905 - aqt.helper - DEBUG - helper 29276 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt5_5152_src_doc_examples/Updates.xml.sha256
+2026-09-17 22:33:13,926 - aqt.installer - INFO - installer 29276 DRY RUN: Would download and install the following:
+2026-09-17 22:33:13,927 - aqt.installer - INFO - installer 29276   - qtbase: online/qtsdkrepository/windows_x86/desktop/qt5_5152_src_doc_examples/qt.qt5.5152.src/5.15.2-0-202011130724qtbase-everywhere-src-5.15.2.7z
+2026-09-17 22:33:13,927 - aqt.installer - INFO - installer 29276 Total packages: 1
+2026-09-17 22:33:13,928 - aqt.main - INFO - installer 29276 Finished installation
+2026-09-17 22:33:13,928 - aqt.main - INFO - installer 29276 Time elapsed: 5.02472120 second
+2026-09-17 22:33:40,561 - aqt.main - INFO - installer 47944 aqtinstall(aqt) v3.3.0 on Python 3.12.2 [CPython MSC v.1937 64 bit (AMD64)]
+2026-09-17 22:33:40,563 - aqt.helper - DEBUG - helper 47944 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt5_5152_src_doc_examples/Updates.xml.sha256
+2026-09-17 22:33:47,969 - aqt.helper - DEBUG - helper 29460 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt5_5152_src_doc_examples/qt.qt5.5152.src/5.15.2-0-202011130724qtbase-everywhere-src-5.15.2.7z.sha256
+2026-09-17 22:33:50,887 - aqt.helper - INFO - helper 29460 Downloading qtbase...
+2026-09-17 22:33:50,887 - aqt.installer - DEBUG - installer 29460 Download URL: https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt5_5152_src_doc_examples/qt.qt5.5152.src/5.15.2-0-202011130724qtbase-everywhere-src-5.15.2.7z
+2026-09-17 22:33:53,667 - aqt.helper - DEBUG - helper 29460 Asked to redirect(302) to: https://qtproject.mirror.liquidtelecom.com/online/qtsdkrepository/windows_x86/desktop/qt5_5152_src_doc_examples/qt.qt5.5152.src/5.15.2-0-202011130724qtbase-everywhere-src-5.15.2.7z
+2026-09-17 22:33:53,668 - aqt.helper - INFO - helper 29460 Redirected: qtproject.mirror.liquidtelecom.com
+2026-09-17 22:38:06,015 - aqt.installer - INFO - installer 29460 Finished installation of qtbase-everywhere-src-5.15.2.7z in 258.05127150
+2026-09-17 22:38:06,322 - aqt.main - INFO - installer 47944 Finished installation
+2026-09-17 22:38:06,323 - aqt.main - INFO - installer 47944 Time elapsed: 265.76164740 second
