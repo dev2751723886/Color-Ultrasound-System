@@ -1,662 +1,285 @@
-# Telemedicine - 基于 Qt/OpenCV/MySQL 的远程医疗诊断系统
+# Telemedicine（构建/部署版）— 基于 Qt/OpenCV/MySQL 的远程医疗诊断系统
+
+> 本目录是「南京市鼓楼医院远程诊断系统」的 **构建与部署工作区**：源码与主项目一致，
+> 额外包含 qmake 构建产物（`release/`、`debug/`）与一个可直接运行的 **部署包（`deploy/`）**。
 
 ## 目录
 
-- [1. 项目概述](#1-项目概述)
-- [2. 系统架构](#2-系统架构)
-  - [2.1 整体架构图](#21-整体架构图)
-  - [2.2 数据流图](#22-数据流图)
-- [3. 项目文件结构](#3-项目文件结构)
-- [4. 数据库设计](#4-数据库设计)
-  - [4.1 连接配置](#41-连接配置)
-  - [4.2 数据表结构](#42-数据表结构)
-- [5. 信号与槽 / 事件机制](#5-信号与槽--事件机制)
-- [6. 核心流程详解](#6-核心流程详解)
-  - [6.1 程序启动与数据库连接流程](#61-程序启动与数据库连接流程)
-  - [6.2 患者信息显示流程](#62-患者信息显示流程)
-  - [6.3 CT 影像处理流程](#63-ct-影像处理流程)
-  - [6.4 患者照片与病历显示流程](#64-患者照片与病历显示流程)
-- [7. 关键技术点与 Qt/C++ 知识点](#7-关键技术点与-qtc-知识点)
-- [8. 构建与运行](#8-构建与运行)
+- [1. 目录说明](#1-目录说明)
+- [2. 项目文件结构](#2-项目文件结构)
+- [3. 构建流程](#3-构建流程)
+- [4. 部署包说明](#4-部署包说明)
+  - [4.1 运行时依赖清单](#41-运行时依赖清单)
+  - [4.2 Qt 插件](#42-qt-插件)
+- [5. 运行步骤](#5-运行步骤)
+- [6. 数据库设计](#6-数据库设计)
+- [7. 核心功能概览](#7-核心功能概览)
+- [8. 关键技术点](#8-关键技术点)
 - [9. 待优化项](#9-待优化项)
 
 ---
 
-## 1. 项目概述
+## 1. 目录说明
 
-Telemedicine 是一个基于 **Qt 5 + OpenCV + MySQL** 实现的远程医疗诊断桌面客户端。系统面向 **"区域医疗中心"** 的远程会诊场景，为医生提供一个统一的工作台：
+| 目录 / 文件 | 性质 | 说明 |
+|-------------|------|------|
+| `main.cpp` 等源码 | 源文件 | 与主项目（`D:\面试项目\Telemedicine\Telemedicine`）完全一致 |
+| `Telemedicine.pro` | 项目文件 | qmake 工程描述 |
+| `Makefile*` | 构建文件 | 由 `qmake` 生成，勿手工修改 |
+| `release/` | 构建产物 | Release 编译中间产物（`.obj`、`moc_*.cpp`）与 `Telemedicine.exe` |
+| `debug/` | 构建产物 | Debug 构建输出（当前为空） |
+| `deploy/` | **部署包** | 可独立运行的分发目录（exe + 全部运行时依赖 + 插件 + 图片） |
+| `packages/` | 第三方库 | OpenCV 4.x 与 MySQL 连接库（供编译期链接） |
+| `app.log` | 日志 | 运行时日志文件（当前为空） |
 
-- **患者信息管理**：从 MySQL 数据库读取患者基本信息（姓名、性别、年龄、民族、医保卡编号、照片）与病历，以表格 + 详情面板的形式展示。
-- **CT 影像诊断**：载入患者 CT 图像，通过 OpenCV 图像处理（灰度化、高斯模糊、霍夫圆检测）自动圈出疑似病灶（子宫肌瘤），并生成诊断结论。
-- **科室导航**：左侧树形控件展示"区县 → 科室"的医院组织架构。
-
-**核心特性：**
-
-- Qt Model/View 架构（`QSqlTableModel` + `QTableView`）实现数据库表格展示
-- OpenCV 霍夫圆检测（`HoughCircles`）自动识别 CT 影像中的椭球形病灶
-- `Mat` 与 `QImage` 零拷贝共享内存，实现 OpenCV 处理结果直出 Qt 界面
-- 患者照片以 Base64 编码存储于数据库，运行时解码显示
-- `QTimer` 定时刷新实时时钟与日期（LCD 数字显示）
-- 数据库断连时自动拉起 `mysqld.exe` 并重连
-
----
-
-## 2. 系统架构
-
-### 2.1 整体架构图
-
-```mermaid
-graph TB
-    subgraph UI["界面层 (mainwindow.ui + MainWindow)"]
-        A[MainWindow 主窗口] --> A1[QTreeWidget 科室导航树]
-        A --> A2[QTableView 患者信息表格]
-        A --> A3[QLabel CT_Img_Label 影像显示]
-        A --> A4[QTabWidget 信息/病历面板]
-        A --> A5[QLCDNumber 年月日 + QTimeEdit 时钟]
-        A --> A6[QProgressBar 诊断进度条]
-        A --> A7[QPushButton 开始诊断]
-    end
-
-    subgraph Logic["逻辑层 (mainwindow.cpp)"]
-        B[MainWindow 类]
-        B --> B1[initMainWindow 初始化]
-        B --> B2[onTableSelectChange 患者切换]
-        B --> B3[ctImgRead 载入CT]
-        B --> B4[ctImgProc 图像处理]
-        B --> B5[ctImgHoughCircles 霍夫圆检测]
-        B --> B6[showUserPhoto 照片显示]
-        B --> B7[onTimeOut 时钟刷新]
-    end
-
-    subgraph Data["数据层"]
-        C1[(MySQL 数据库<br/>patient)]
-        C2[OpenCV 图像库]
-        C3[本地图片文件<br/>Tumor.jpg / CT.jpg]
-    end
-
-    A2 -->|QSqlTableModel| C1
-    B -->|QSqlDatabase QMYSQL| C1
-    B -->|imread / cvtColor / HoughCircles| C2
-    B -->|QFileDialog 载入| C3
-
-    B -->|信号/槽 驱动| A
-```
-
-### 2.2 数据流图
-
-```mermaid
-sequenceDiagram
-    participant UI as 界面控件
-    participant MW as MainWindow 逻辑
-    participant DB as MySQL 数据库
-    participant CV as OpenCV
-
-    Note over UI,CV: === 启动与患者信息加载 ===
-    MW->>DB: createMySqlConn() 建立 QMYSQL 连接
-    DB-->>MW: 连接成功
-    MW->>DB: QSqlTableModel::setTable("basic_inf") + select()
-    DB-->>UI: QTableView 显示患者列表
-    MW->>UI: onTableSelectChange() 填充姓名/性别/年龄等
-
-    Note over UI,CV: === 患者照片与病历 ===
-    UI->>MW: 点击表格行 / 切换 Tab
-    MW->>DB: 查询 details_inf 表（姓名匹配）
-    DB-->>MW: Base64 照片 + 病历文本
-    MW->>UI: fromBase64 解码 => QPixmap 显示 / setText
-
-    Note over UI,CV: === CT 影像诊断 ===
-    UI->>MW: 点击"开始诊断"
-    MW->>CV: QFileDialog 载入图片 => imread
-    CV-->>MW: Mat 图像
-    MW->>CV: cvtColor 灰度化 => GaussianBlur 去噪
-    MW->>CV: HoughCircles 检测圆形病灶
-    CV-->>MW: 圆心 + 半径列表
-    MW->>CV: circle 绘制标记圈
-    MW->>UI: Mat => QImage => QPixmap 显示
-    MW->>UI: QMessageBox 弹出诊断结论
-```
+> **与主项目的区别**：本目录的 `packages/mysql_lib` 仅保留编译期所需的 `include/` 与 `lib/`（约 7.4 MB），
+> 不含完整 MySQL 服务器（`mysqld.exe`）；主项目则保留了完整 MySQL 发行包（约 579 MB）。
 
 ---
 
-## 3. 项目文件结构
+## 2. 项目文件结构
 
 ```
-Telemedicine/
-├── Telemedicine.pro                 # Qt 项目文件（qmake）
+tele_build/
 ├── README.md                        # 本文档
 ├── main.cpp                         # 程序入口（~16 行）
 ├── mainwindow.h                     # 主窗口类声明（~79 行）
 ├── mainwindow.cpp                   # 主窗口实现（~213 行）
 ├── mainwindow.ui                    # Qt Designer 界面布局
-├── ui_mainwindow.h                  # 由 .ui 自动生成的 UI 头文件
+├── ui_mainwindow.h                  # 由 .ui 生成的 UI 头文件
+├── Telemedicine.pro                 # qmake 项目文件
+├── threadpool.h                     # 自研线程池（std::thread + 条件变量）
+├── threadpool.cpp                   # 线程池实现（后台执行图像处理）
 │
-├── CT.jpg                           # 界面初始 CT 影像
-├── Tumor.jpg                        # 待诊断的肿瘤 CT 影像
-├── Tumor_proced.jpg                 # 处理后的 CT 影像（诊断输出）
+├── Makefile                         # qmake 生成（Debug/Release 共用入口）
+├── Makefile.Debug                   # Debug 构建规则
+├── Makefile.Release                 # Release 构建规则
+├── .qmake.stash                     # qmake 配置缓存
+├── app.log                          # 运行时日志（空）
 │
-├── packages/                        # 第三方依赖库（随项目分发）
-│   ├── opencv4_x64-windows/         # OpenCV 4.x（头文件 + lib）
-│   │   ├── include/
-│   │   └── lib/                     # opencv_core4 / imgproc4 / imgcodecs4
-│   └── mysql_lib/
-│       ├── x32/                     # MySQL 连接库（32 位）
-│       ├── x64/                     # MySQL 连接库（64 位）
-│       └── x64_8.1/                 # MySQL 8.1 连接库（当前使用）
-│           ├── include/
-│           └── lib/                 # libmysql
+├── debug/                           # Debug 构建输出目录（当前为空）
 │
-└── dll/                             # 运行时依赖 DLL
-    ├── ALL/                         # OpenCV 全部模块 DLL + 图像编解码 DLL
-    ├── opencv/                      # OpenCV 运行时库
-    ├── qmysql/                      # Qt MySQL 驱动插件
-    ├── jpeg62/ libpng16/ libweb/ liblzma/ tiff/ zlib1/   # 图像编解码依赖
-    └── caching_sha2_password.dll    # MySQL 8.0 认证插件（根目录）
+├── release/                         # Release 构建输出
+│   ├── Telemedicine.exe             # 编译产物
+│   ├── main.obj / mainwindow.obj    # 目标文件
+│   ├── moc_mainwindow.cpp/.obj      # moc 生成的元对象代码
+│   └── moc_predefs.h                # moc 预处理头
+│
+├── deploy/                          # ★ 可运行部署包（自包含）
+│   ├── Telemedicine.exe             # 主程序
+│   ├── Qt5Core.dll / Qt5Gui.dll     # Qt 核心库
+│   ├── Qt5Sql.dll / Qt5Widgets.dll  # Qt SQL / 控件库
+│   ├── libmysql.dll                 # MySQL 客户端库
+│   ├── caching_sha2_password.dll    # MySQL 8.0 认证插件
+│   ├── opencv_*.dll                 # OpenCV 运行时（全套模块）
+│   ├── jpeg62/tiff/libpng16/...     # 图像编解码依赖
+│   ├── libcrypto / libssl           # OpenSSL 依赖
+│   ├── sqldrivers/                  # Qt SQL 驱动插件
+│   │   └── qsqlmysql.dll            #   MySQL 驱动
+│   ├── platforms/                   # Qt 平台插件
+│   │   └── qwindows.dll             #   Windows 平台支持
+│   ├── imageformats/                # Qt 图像格式插件
+│   │   └── qgif/qico/qjpeg(.d).dll  #   GIF/ICO/JPEG 解码
+│   ├── CT.jpg                       # 初始 CT 影像
+│   ├── Tumor.jpg                    # 待诊断肿瘤 CT 影像
+│   └── Tumor_proced.jpg             # 诊断输出影像
+│
+└── packages/                        # 第三方编译期依赖
+    ├── opencv4_x64-windows/         # OpenCV 4.x（bin/lib/include/share）
+    │   ├── bin/                     # 运行时 DLL
+    │   ├── lib/                     # 链接库（opencv_core4/imgproc4/imgcodecs4）
+    │   └── include/opencv2/         # 头文件
+    └── mysql_lib/
+        └── x64_8.1/                 # MySQL 8.1 连接库
+            ├── include/             # mysql.h / openssl 头文件
+            └── lib/                 # libmysql.lib
 ```
 
 ---
 
-## 4. 数据库设计
+## 3. 构建流程
 
-### 4.1 连接配置
-
-系统使用 **Qt SQL 模块** 的 `QMYSQL` 驱动连接 MySQL（[mainwindow.h L56-L76](mainwindow.h#L56)）：
-
-```cpp
-QSqlDatabase sqldb = QSqlDatabase::addDatabase("QMYSQL");
-sqldb.setHostName("127.0.0.1");     // 本机
-sqldb.setPort(3306);                // 默认端口
-sqldb.setDatabaseName("patient");   // 数据库名
-sqldb.setUserName("root");          // 用户名
-sqldb.setPassword("123456");        // 密码
-```
-
-| 配置项 | 值 | 说明 |
-|--------|-----|------|
-| 驱动 | `QMYSQL` | Qt 的 MySQL 插件（`qsqlmysql.dll`） |
-| 主机 | `127.0.0.1` | 本机回环地址 |
-| 端口 | `3306` | MySQL 默认端口 |
-| 数据库 | `patient` | 患者数据库 |
-| 用户 | `root` | 数据库账号 |
-| 密码 | `123456` | 数据库密码 |
-
-### 4.2 数据表结构
-
-系统涉及两张数据表：
-
-**`basic_inf`（患者基本信息表）：**
-
-| 列索引 | 字段含义 | 类型 | 用途 |
-|--------|----------|------|------|
-| 0 | 医保卡编号（SSN） | varchar | 展示在 `ssnLineEdit` |
-| 1 | 姓名 | varchar | 展示在 `nameLabel`，用于关联病历/照片 |
-| 2 | 性别 | varchar（"男"/"女"） | 控制 `maleRadioButton`/`femaleRadioButton` |
-| 3 | 民族 | varchar | 展示在 `ethniComboBox` |
-| 4 | 出生日期 | date | 计算年龄 `ageSpinBox` |
-
-**`details_inf`（患者明细表）：**
-
-| 列索引 | 字段含义 | 类型 | 用途 |
-|--------|----------|------|------|
-| 0 | 姓名 | varchar | 与 `basic_inf` 关联 |
-| 1 | 病历 | text | 展示在 `caseTextEdit` |
-| 2 | 照片 | blob（Base64 编码） | 解码后展示在 `photoLabel` |
-
-**关联关系**：两张表通过 **姓名（name）** 字段进行关联（`showUserPhoto` 与 `on_tabWidget_tabBarClicked` 中均按姓名遍历 `details_inf` 匹配当前患者）。
-
----
-
-## 5. 信号与槽 / 事件机制
-
-不同于原生 Win32 的消息循环，Qt 使用 **信号与槽（Signal & Slot）** 机制实现对象间通信。本项目涉及的信号槽如下：
-
-```mermaid
-graph LR
-    subgraph Signals["信号（触发源）"]
-        S1[QTimer::timeout]
-        S2[startPushButton::clicked]
-        S3[basicTableView::clicked]
-        S4[tabWidget::tabBarClicked]
-    end
-
-    subgraph Slots["槽函数（响应）"]
-        L1[onTimeOut 刷新时钟]
-        L2[on_startPushButton_clicked 开始诊断]
-        L3[on_basicTableView_clicked 切换患者]
-        L4[on_tabWidget_tabBarClicked 显示病历]
-    end
-
-    S1 -->|connect| L1
-    S2 -->|connect| L2
-    S3 -->|connect| L3
-    S4 -->|connect| L4
-```
-
-**关键设计点：**
-
-1. **自动命名槽**：`on_<控件名>_<信号名>()` 命名约定由 `ui` 自动通过 `connectSlotsByName` 连接，无需手动 `connect`。例如 `on_startPushButton_clicked` 自动绑定"开始诊断"按钮的 `clicked()` 信号。
-
-2. **手动连接**：仅 `QTimer::timeout` 通过显式 `connect` 连接（[mainwindow.cpp L46](mainwindow.cpp#L46)）：
-   ```cpp
-   connect(myTimer, SIGNAL(timeout()), this, SLOT(onTimeOut()));
-   ```
-
-3. **元对象系统**：类声明中的 `Q_OBJECT` 宏 + `private slots:` 关键字由 **moc（Meta-Object Compiler）** 预处理，生成信号槽的元数据与派发代码。
-
----
-
-## 6. 核心流程详解
-
-### 6.1 程序启动与数据库连接流程
-
-```
-main()
-├── QApplication a(argc, argv)      # 创建应用对象
-├── createMySqlConn()               # 首次尝试连接数据库
-│   └── QSqlDatabase::addDatabase("QMYSQL")
-│       ├── setHostName/Port/Name/User/Password
-│       └── sqldb.open()
-│           ├── 成功 → 返回 true
-│           └── 失败 → QMessageBox 弹窗 + exit(-1)
-│
-├── 若连接失败：
-│   ├── QProcess process            # 创建进程对象
-│   ├── process.start(".../mysqld.exe")   # 拉起 MySQL 服务进程
-│   └── createMySqlConn() 重试      # 再次连接
-│
-├── MainWindow w                    # 创建主窗口
-├── w.show()                        # 显示窗口
-└── a.exec()                        # 进入事件循环
-```
-
-### 6.2 患者信息显示流程
-
-```
-MainWindow 构造函数
-├── setupUi(this)                   # 加载 .ui 界面
-├── initMainWindow()                # 初始化影像 + 时钟
-├── new QSqlTableModel(model)       # 创建患者表模型
-│   ├── setTable("basic_inf")
-│   └── select()                    # 执行 SELECT 查询
-├── new QSqlTableModel(model_d)     # 创建明细表模型
-│   ├── setTable("details_inf")
-│   └── select()
-├── basicTableView->setModel(model) # 表格绑定模型
-└── onTableSelectChange(0)          # 默认选中第一行患者
-    ├── index(r,1) → nameLabel      # 姓名
-    ├── index(r,2) → 性别单选钮      # "男"/"女"
-    ├── index(r,4) → 计算年龄         # 当前年 - 出生年
-    ├── index(r,3) → ethniComboBox   # 民族
-    ├── index(r,0) → ssnLineEdit     # 医保卡编号
-    └── showUserPhoto()             # 显示照片
-```
-
-**关键技术细节：**
-
-- **QSqlTableModel**：Qt SQL 提供的表格模型，`setTable()` + `select()` 即可将整张表加载为可编辑/只读模型，通过 `QTableView` 显示。
-- **QModelIndex**：`model->index(row, column)` 定位到具体单元格，`model->data(index)` 返回 `QVariant`，再 `toString()`/`toDate()` 转换。
-- **年龄计算**：无独立年龄字段，由"当前年份 − 出生年份"动态计算（[mainwindow.cpp L67-L68](mainwindow.cpp#L67)）。
-
-### 6.3 CT 影像处理流程
-
-```mermaid
-flowchart TD
-    A[点击 开始诊断] --> B[ctImgRead 载入图片]
-    B --> C["QFileDialog 选择图片<br/>*.png *.jpg *.jpeg *.bmp"]
-    C --> D[imread 读取为 Mat]
-    D --> E[cvtColor BGR2RGB 色彩转换]
-    E --> F[cvtColor RGB2GRAY 灰度化]
-    F --> G[ctImgProc 图像处理]
-    G --> H[GaussianBlur 高斯模糊去噪<br/>Size 9x9]
-    H --> I["HoughCircles 霍夫圆检测<br/>dp=2, minDist=rows/8, param1=200, param2=100"]
-    I --> J[遍历检测到的圆]
-    J --> K["circle 绘制外圈<br/>Scalar 238,0,238 品红, 线宽3"]
-    J --> L["circle 绘制圆心<br/>Scalar 238,0,0 红, 填充"]
-    K --> M[myCtImg = 处理结果]
-    L --> M
-    M --> N[Mat => QImage => QPixmap]
-    N --> O[ctImgShow 显示到 CT_Img_Label]
-    O --> P["QMessageBox 提示<br/>子宫内壁见椭球形阴影, 疑似子宫肌瘤"]
-```
-
-**霍夫圆检测参数解析**（[mainwindow.cpp L119-L143](mainwindow.cpp#L119)）：
-
-```cpp
-HoughCircles(ctGrayImg, h_circles, HOUGH_GRADIENT,
-             2,                 // dp：累加器分辨率 = 输入/2（分辨率降低）
-             ctGrayImg.rows/8,  // minDist：圆心最小间距 = 图像高/8
-             200,               // param1：Canny 边缘检测高阈值
-             100);              // param2：累加器阈值（越小检出越多）
-```
-
-| 参数 | 值 | 说明 |
-|------|-----|------|
-| 检测方法 | `HOUGH_GRADIENT` | 基于梯度的霍夫变换 |
-| `dp` | 2 | 累加器分辨率与输入图像比值的倒数 |
-| `minDist` | `rows/8` | 防止重复检出同一圆的最小圆心距离 |
-| `param1` | 200 | Canny 边缘检测的高阈值（低阈值为其一半） |
-| `param2` | 100 | 圆心累加器阈值，越小检出的圆越多（含误检） |
-
-### 6.4 患者照片与病历显示流程
-
-```
-患者照片（showUserPhoto）
-├── 遍历 details_inf 表（model_d）
-│   ├── index(i,0) 读取姓名
-│   └── 与 nameLabel 文本匹配
-│       └── 匹配成功 → 定位到 index(i,2)（照片列）
-├── toByteArray() 读取 Base64 数据
-├── QByteArray::fromBase64() 解码为二进制
-├── QPixmap::loadFromData(data, "JPG")   # 从内存加载图片
-└── photoLabel->setPixmap(photo)         # 显示
-
-病历显示（on_tabWidget_tabBarClicked）
-├── 切换到"病历"Tab（index == 1）
-├── 遍历 details_inf 按姓名匹配
-├── 定位到 index(i,1)（病历列）
-├── caseTextEdit->setText(病历文本)
-└── setFont(QFont("楷体", 12))           # 病历专用字体
-```
-
-**关键技术细节：**
-
-- **Base64 存储**：照片以 Base64 字符串存于数据库 `blob` 字段，读取时 `QByteArray::fromBase64()` 解码还原为 JPG 二进制流，再由 `QPixmap::loadFromData()` 直接从内存解码显示，全程无临时文件落盘。
-
----
-
-## 7. 关键技术点与 Qt/C++ 知识点
-
-### 7.1 Qt 框架基础 — 事件循环与元对象系统
-
-```cpp
-// 程序入口
-int main(int argc, char *argv[]) {
-    QApplication a(argc, argv);   // 初始化 Qt 应用
-    MainWindow w;
-    w.show();
-    return a.exec();              // 进入事件循环（阻塞）
-}
-
-// 类声明中的元对象标记
-class MainWindow : public QMainWindow {
-    Q_OBJECT                       // 启用信号槽、动态属性等
-private slots:                     // 槽函数段（moc 识别）
-    void onTimeOut();
-    void on_startPushButton_clicked();
-};
-```
-
-| 知识点 | 说明 |
-|--------|------|
-| **QApplication** | 管理 GUI 应用的控制流与主要设置，`exec()` 进入事件循环 |
-| **事件驱动** | 与 Win32 消息循环类似，Qt 通过事件循环分发鼠标/键盘/定时器/重绘事件 |
-| **Q_OBJECT 宏** | 声明元对象所需成员，由 moc 生成 `moc_mainwindow.cpp` |
-| **moc** | 元对象编译器，qmake 构建时自动运行，生成信号槽元数据 |
-| **自动连接** | `connectSlotsByName` 按命名约定自动关联 UI 控件信号与槽 |
-
-### 7.2 MySQL 数据库 — QSqlDatabase 与 QMYSQL 驱动
-
-```cpp
-#include <QSqlDatabase>
-#include <QSqlError>
-
-QSqlDatabase sqldb = QSqlDatabase::addDatabase("QMYSQL");  // 加载 MySQL 驱动
-sqldb.setHostName("127.0.0.1");
-sqldb.setPort(3306);
-sqldb.setDatabaseName("patient");
-sqldb.setUserName("root");
-sqldb.setPassword("123456");
-
-if (!sqldb.open()) {
-    qDebug() << sqldb.lastError();       // 输出错误详情
-    return false;
-}
-```
-
-| 知识点 | 说明 |
-|--------|------|
-| **QSqlDatabase** | Qt SQL 的数据库连接抽象，`addDatabase()` 注册一个命名连接 |
-| **QMYSQL 驱动** | Qt 的 MySQL 插件，运行时需 `qsqlmysql.dll`（项目内置于 `dll/qmysql/`） |
-| **lastError()** | 返回 `QSqlError`，包含错误码与描述，用于诊断连接失败原因 |
-| **MySQL 8.0 认证** | 需 `caching_sha2_password.dll` 支持默认的 `caching_sha2_password` 认证插件 |
-
-### 7.3 Qt Model/View 架构 — QSqlTableModel
-
-```cpp
-QSqlTableModel *model = new QSqlTableModel(this);
-model->setTable("basic_inf");    // 绑定数据表
-model->select();                  // 执行 SELECT，填充模型
-ui->basicTableView->setModel(model);  // 视图绑定模型
-
-// 读取单元格
-QModelIndex index = model->index(row, column);
-QString name = model->data(index).toString();
-```
-
-| 知识点 | 说明 |
-|--------|------|
-| **Model/View 分离** | 模型（数据）与视图（显示）解耦，一个模型可绑定多个视图 |
-| **QSqlTableModel** | 针对单表的只读/可编辑模型，自动生成 SQL 查询 |
-| **QModelIndex** | 模型的索引对象，`(row, column)` 定位单元格 |
-| **QVariant** | `data()` 返回 `QVariant`，可隐式/显式转为 `QString`/`QDate`/`int` 等 |
-
-### 7.4 OpenCV 图像处理 — 灰度化、模糊、霍夫圆检测
-
-```cpp
-#include "opencv2/opencv.hpp"
-using namespace cv;
-
-Mat ctImg = imread("Tumor.jpg");                 // 读取图像
-Mat ctRgbImg, ctGrayImg;
-cvtColor(ctImg, ctRgbImg, COLOR_BGR2RGB);        // BGR → RGB
-cvtColor(ctRgbImg, ctGrayImg, COLOR_RGB2GRAY);   // RGB → 灰度
-
-GaussianBlur(ctGrayImg, ctGrayImg, Size(9,9), 2, 2);   // 高斯滤波去噪
-
-vector<Vec3f> h_circles;
-HoughCircles(ctGrayImg, h_circles, HOUGH_GRADIENT,
-             2, ctGrayImg.rows/8, 200, 100);
-
-for (size_t i = 0; i < h_circles.size(); i++) {
-    Point center(cvRound(h_circles[i][0]), cvRound(h_circles[i][1]));
-    int radius = cvRound(h_circles[i][2]);
-    circle(ctColorImg, center, radius, Scalar(238,0,238), 3);  // 外圈
-    circle(ctColorImg, center, 3, Scalar(238,0,0), -1);        // 圆心
-}
-```
-
-| 知识点 | 说明 |
-|--------|------|
-| **Mat** | OpenCV 核心矩阵类，管理图像像素与内存 |
-| **cvtColor** | 颜色空间转换，`COLOR_BGR2RGB`/`COLOR_RGB2GRAY` 等 |
-| **GaussianBlur** | 高斯模糊，`Size(9,9)` 卷积核尺寸，`2,2` 为 x/y 方向标准差 |
-| **HoughCircles** | 霍夫圆检测，返回 `vector<Vec3f>`（每个元素 = 圆心 x、y、半径） |
-| **circle** | 绘制圆形，`-1` 线宽表示实心填充 |
-
-### 7.5 Mat 与 QImage/QPixmap 互转 — 零拷贝共享内存
-
-```cpp
-// Mat → QImage（共享底层数据，不复制像素）
-Mat ctRgbImg;                         // 已经是 RGB 三通道
-QImage qimg((const unsigned char*)ctRgbImg.data,   // 数据指针
-            ctRgbImg.cols, ctRgbImg.rows,          // 宽、高
-            QImage::Format_RGB888);                // 格式
-
-// QImage → QPixmap → QLabel 显示
-ui->CT_Img_Label->setPixmap(
-    QPixmap::fromImage(qimg).scaled(
-        ui->CT_Img_Label->size(), Qt::KeepAspectRatio));  // 等比缩放
-```
-
-| 知识点 | 说明 |
-|--------|------|
-| **共享数据指针** | `QImage` 直接引用 `Mat.data`，不复制像素，节省内存 |
-| **Format_RGB888** | 每像素 3 字节（R、G、B 各 1 字节），与 OpenCV 三通道 `CV_8UC3` 布局一致 |
-| **BGR → RGB 必要性** | OpenCV 默认 BGR 顺序，Qt 需 RGB，故必须先 `cvtColor` |
-| **QPixmap vs QImage** | `QImage` 独立于硬件，`QPixmap` 面向屏幕显示，GUI 用后者 |
-| **scaled + KeepAspectRatio** | 等比缩放，保持图像宽高比不变形 |
-
-### 7.6 定时器与时钟 — QTimer
-
-```cpp
-QTimer *myTimer = new QTimer();
-myTimer->setInterval(1000);      // 每 1000ms 触发一次
-myTimer->start();
-connect(myTimer, SIGNAL(timeout()), this, SLOT(onTimeOut()));
-
-void MainWindow::onTimeOut() {
-    ui->timeEdit->setTime(QTime::currentTime());  // 更新当前时间
-}
-```
-
-| 知识点 | 说明 |
-|--------|------|
-| **QTimer** | 定时器类，`setInterval()` 设置周期，`start()` 启动 |
-| **timeout 信号** | 每次到点发出，驱动槽函数执行 |
-| **QLCDNumber** | LCD 数码管风格显示，`display()` 设置数字，`digitCount()` 设置位数 |
-
-### 7.7 Base64 图像存储与读取
-
-```cpp
-// 从数据库读取 Base64 照片并显示
-QByteArray base64ImageData = model_d->data(index).toByteArray();
-QByteArray imageData = QByteArray::fromBase64(base64ImageData);  // 解码
-QPixmap photo;
-photo.loadFromData(imageData, "JPG");                            // 内存加载
-ui->photoLabel->setPixmap(photo);
-```
-
-| 知识点 | 说明 |
-|--------|------|
-| **Base64** | 二进制 → 可打印 ASCII 编码，便于存入数据库文本/blob 字段 |
-| **fromBase64()** | `QByteArray` 静态方法，将 Base64 解码为原始二进制 |
-| **loadFromData()** | `QPixmap` 直接从内存字节数组解码图片，无需文件 |
-
-### 7.8 内存图像保存 — QBuffer 与 QByteArray
-
-```cpp
-void MainWindow::ctImgSave() {
-    QFile image("Tumor_proced.jpg");        // 打开输出文件
-    image.open(QIODevice::ReadWrite);
-    QByteArray qba;
-    QBuffer buf(&qba);                      // 内存缓冲区
-    buf.open(QIODevice::WriteOnly);
-    myCtQImage.save(&buf, "JPG");           // 写入内存（编码为 JPG）
-    image.write(qba);                       // 一次性写入磁盘
-}
-```
-
-| 知识点 | 说明 |
-|--------|------|
-| **QBuffer** | `QIODevice` 的内存实现，提供"内存即文件"的流接口 |
-| **QImage::save(&buf, "JPG")** | 将图像编码为指定格式写入 `QIODevice` |
-| **无中间临时文件** | 图像先在内存编码，再一次落盘 |
-
-### 7.9 文件对话框 — QFileDialog
-
-```cpp
-QString ctImgName = QFileDialog::getOpenFileName(
-    this,                                            // 父窗口
-    u8"载入CT相片",                                    // 标题
-    ".",                                             // 起始目录
-    "Image File(*.png *.jpg *.jpeg *.bmp)");         // 过滤格式
-if (ctImgName.isEmpty()) return;                     // 用户取消
-Mat ctImg = imread(ctImgName.toLatin1().data());     // OpenCV 读取
-```
-
-| 知识点 | 说明 |
-|--------|------|
-| **getOpenFileName** | 静态方法，弹出文件选择对话框，返回选中路径（取消则返回空串） |
-| **文件过滤器** | 限定可选文件类型，格式为 `"描述(*.ext1 *.ext2)"` |
-| **toLatin1().data()** | `QString` → `const char*`，供 OpenCV `imread` 使用 |
-
-### 7.10 进度条与事件处理 — QProgressBar 与 processEvents
-
-```cpp
-void MainWindow::on_startPushButton_clicked() {
-    ctImgRead();                 // 1. 载入图片
-    ui->progressBar->setMaximum(0);   // 0 = 忙碌指示（来回滚动）
-    // 模拟耗时操作，同时保持界面响应
-    QTime time; time.start();
-    while (time.elapsed() < 5000)
-        QCoreApplication::processEvents();   // 处理未决事件，避免界面假死
-    ui->progressBar->setMaximum(100);
-    ctImgProc();                 // 2. 图像处理
-    ctImgSave();                 // 3. 保存结果
-}
-```
-
-| 知识点 | 说明 |
-|--------|------|
-| **QProgressBar** | 进度条控件，`setMaximum(0)` 显示忙碌动画，`setValue()` 设置进度 |
-| **processEvents()** | 在处理长任务期间临时处理事件队列，防止 UI 无响应 |
-| **QTime::elapsed()** | 返回自 `start()` 起的毫秒数，用于模拟/测量耗时 |
-
-### 7.11 QProcess — 启动外部进程
-
-```cpp
-#include <QProcess>
-QProcess process;
-process.start("C:/Program Files/MySQL/MySQL Server 8.0/bin/mysqld.exe");
-```
-
-| 知识点 | 说明 |
-|--------|------|
-| **QProcess** | 在 Qt 应用中启动外部程序并与其交互 |
-| **start()** | 异步启动进程，`waitForStarted()/waitForFinished()` 可同步等待 |
-
----
-
-## 8. 构建与运行
-
-### 8.1 环境要求
-
-| 组件 | 要求 |
-|------|------|
-| 操作系统 | Windows 10/11 x64 |
-| IDE | Qt Creator（或任意支持 qmake 的环境） |
-| Qt 版本 | Qt 5.x（含 `widgets`、`sql` 模块） |
-| 编译器 | MSVC x64（或 MinGW x64，需匹配 OpenCV 预编译库） |
-| OpenCV | 4.x（项目内置 `packages/opencv4_x64-windows/`） |
-| MySQL | 8.x（数据库 `patient` 需预先创建） |
-| 数据库 | 需安装 MySQL 并导入 `patient` 库及 `basic_inf`/`details_inf` 表 |
-
-### 8.2 依赖配置（Telemedicine.pro）
-
-项目通过 qmake 的 `INCLUDEPATH` 与 `LIBS` 引用随项目分发的第三方库（[Telemedicine.pro L62-L65](Telemedicine.pro#L62)）：
+### 3.1 依赖配置（Telemedicine.pro）
 
 ```pro
-# OpenCV（$$PWD = 项目根目录）
+QT += core gui sql            # 使用 Core / GUI / SQL 模块
+TARGET = Telemedicine
+TEMPLATE = app
+CONFIG += c++11
+
+# 第三方库（$$PWD = 项目根目录）
 INCLUDEPATH += $$PWD/packages/opencv4_x64-windows/include
 LIBS += -L$$PWD/packages/opencv4_x64-windows/lib \
         -lopencv_core4 -lopencv_imgproc4 -lopencv_imgcodecs4
 
-# MySQL
 LIBS += -L$$PWD/packages/mysql_lib/x64_8.1/lib -llibmysql
 INCLUDEPATH += $$PWD/packages/mysql_lib/x64_8.1/include
 ```
 
-### 8.3 构建步骤
+### 3.2 构建步骤
 
-1. **打开项目**：用 Qt Creator 打开 `Telemedicine.pro`。
-2. **选择套件**：选择 x64 的 MSVC 套件（与 OpenCV/MySQL 库位数一致）。
-3. **构建**：`构建 → 构建项目 (Ctrl+B)`。
-4. **准备数据库**：确保本机 MySQL 服务已启动，并存在 `patient` 库及两张表。
+1. **生成 Makefile**（如 `Makefile` 已存在可跳过）：
+   ```bash
+   qmake Telemedicine.pro
+   ```
+2. **编译 Release 版**：
+   ```bash
+   make -f Makefile.Release    # 或使用 nmake / mingw32-make，取决于编译器套件
+   ```
+   产物输出到 `release/Telemedicine.exe`。
+3. **编译 Debug 版**（可选）：
+   ```bash
+   make -f Makefile.Debug      # 产物输出到 debug/
+   ```
 
-### 8.4 运行步骤
+> 也可直接用 Qt Creator 打开 `Telemedicine.pro`，选择 x64 套件后 `构建 → 构建项目`。
 
-1. **确保运行时依赖**：将 `dll/` 下的运行时库与 `qsqlmysql` 驱动插件放到可执行文件同目录（或系统 PATH）。
-2. **启动程序**：运行编译产物（或 Qt Creator 中 `Ctrl+R`）。
-   - 若数据库未启动，程序会尝试通过 `QProcess` 自动拉起 `mysqld.exe` 并重连。
+---
+
+## 4. 部署包说明
+
+`deploy/` 目录是一个 **自包含的可运行分发包**：将编译产物 `Telemedicine.exe` 与其全部运行时依赖、
+Qt 插件、影像资源集中放置，拷贝到任意 Windows x64 机器上即可直接运行，无需安装 Qt 或 OpenCV。
+
+### 4.1 运行时依赖清单
+
+| 类别 | 文件 | 作用 |
+|------|------|------|
+| Qt 核心 | `Qt5Core.dll`、`Qt5Gui.dll`、`Qt5Widgets.dll` | Qt 基础库 |
+| Qt SQL | `Qt5Sql.dll` | 数据库抽象层 |
+| MySQL | `libmysql.dll` | MySQL 客户端库 |
+| MySQL 认证 | `caching_sha2_password.dll` | MySQL 8.0 `caching_sha2_password` 认证插件 |
+| OpenCV | `opencv_core4/imgproc4/imgcodecs4/highgui4/*.dll` | 图像处理运行时（全套模块） |
+| 图像编解码 | `jpeg62.dll`、`libpng16.dll`、`tiff.dll`、`libwebp*.dll`、`liblzma.dll`、`zlib1.dll`、`turbojpeg.dll` | OpenCV 图像读写底层依赖 |
+| 加密 | `libcrypto-1_1-x64.dll`、`libssl-1_1-x64.dll` | OpenSSL（MySQL 连接加密所需） |
+
+### 4.2 Qt 插件
+
+| 目录 | 文件 | 作用 |
+|------|------|------|
+| `platforms/` | `qwindows.dll` | Windows 平台插件（**缺失则程序无法启动**） |
+| `sqldrivers/` | `qsqlmysql.dll` | QMYSQL 数据库驱动 |
+| `imageformats/` | `qjpeg.dll`、`qgif.dll`、`qico.dll` 等 | QImage/QPixmap 图片格式解码 |
+
+---
+
+## 5. 运行步骤
+
+1. **准备数据库**：确保目标机器已安装 MySQL 8.x，并存在 `patient` 库及 `basic_inf`、`details_inf` 两张表。
+2. **启动程序**：双击 `deploy/Telemedicine.exe`（或运行 `release/Telemedicine.exe`，但需自行补齐依赖 DLL）。
+   - 若数据库未启动，程序会尝试通过 `QProcess` 拉起 `mysqld.exe` 并重连（路径见下文配置说明）。
 3. **使用流程**：
    - 左侧树形控件选择科室，下方表格浏览患者列表。
-   - 点击表格行，右侧信息面板联动显示患者详情（含照片）。
-   - 点击"开始诊断"，选择 CT 影像文件，系统自动检测病灶并弹出诊断结论。
+   - 点击表格行，右侧信息面板联动显示患者详情（含照片、病历）。
+   - 点击「开始诊断」，选择 CT 影像文件，系统自动进行霍夫圆检测并弹出诊断结论。
 
-### 8.5 配置说明
+### 配置说明
 
-- **数据库连接**：主机/端口/库名/账号密码硬编码于 `mainwindow.h` 的 `createMySqlConn()`，按需修改。
-- **MySQL 服务路径**：`main.cpp` 中 `mysqld.exe` 路径硬编码为 `C:/Program Files/MySQL/MySQL Server 8.0/bin/mysqld.exe`，按实际安装路径修改。
-- **初始影像**：程序启动时默认加载根目录 `Tumor.jpg`（[mainwindow.cpp L29](mainwindow.cpp#L29)）。
+- **数据库连接**：主机 `127.0.0.1:3306`、库 `patient`、账号 `root`、密码 `123456`，硬编码于 `mainwindow.h` 的 `createMySqlConn()`。
+- **MySQL 服务路径**：`main.cpp` 中硬编码为 `C:/Program Files/MySQL/MySQL Server 8.0/bin/mysqld.exe`，按实际安装路径修改。
+- **初始影像**：程序启动时默认加载 `deploy/Tumor.jpg`（[mainwindow.cpp L29](mainwindow.cpp#L29)）。
+
+---
+
+## 6. 数据库设计
+
+系统使用 Qt SQL 模块的 `QMYSQL` 驱动连接 MySQL 数据库 `patient`，涉及两张表：
+
+**`basic_inf`（患者基本信息表）：**
+
+| 列索引 | 字段含义 | 展示控件 |
+|--------|----------|----------|
+| 0 | 医保卡编号 | `ssnLineEdit` |
+| 1 | 姓名 | `nameLabel`（关联病历/照片） |
+| 2 | 性别（"男"/"女"） | `maleRadioButton`/`femaleRadioButton` |
+| 3 | 民族 | `ethniComboBox` |
+| 4 | 出生日期 | 计算年龄 → `ageSpinBox` |
+
+**`details_inf`（患者明细表）：**
+
+| 列索引 | 字段含义 | 展示控件 |
+|--------|----------|----------|
+| 0 | 姓名 | 与 `basic_inf` 关联 |
+| 1 | 病历 | `caseTextEdit` |
+| 2 | 照片（Base64 编码） | 解码后 → `photoLabel` |
+
+> 两张表通过 **姓名** 字段关联（非主键，重名会错乱，见「待优化项」）。
+
+---
+
+## 7. 核心功能概览
+
+```mermaid
+flowchart LR
+    A[程序启动] --> B[连接 MySQL<br/>patient 库]
+    B --> C[加载 basic_inf 表<br/>QTableView 展示患者列表]
+    C --> D[点击患者行]
+    D --> E[联动显示 姓名/性别/年龄/民族/医保卡]
+    D --> F[details_inf 按姓名匹配]
+    F --> G[Base64 解码显示照片]
+    F --> H[病历 Tab 显示文本]
+
+    I[点击 开始诊断] --> J[QFileDialog 载入 CT 图片]
+    J --> K[OpenCV 灰度化 + 高斯模糊]
+    K --> L[HoughCircles 霍夫圆检测]
+    L --> M[circle 标记病灶圈]
+    M --> N[Mat → QImage → QLabel 显示]
+    N --> O[弹出诊断结论]
+```
+
+---
+
+## 8. 关键技术点
+
+| 技术点 | 实现 | 说明 |
+|--------|------|------|
+| **数据库访问** | `QSqlDatabase` + `QMYSQL` | Qt SQL 抽象层，运行时需 `qsqlmysql.dll` 插件 |
+| **表格展示** | `QSqlTableModel` + `QTableView` | Model/View 架构，`setTable()` + `select()` 自动查询 |
+| **影像载入** | `cv::imread` + `cvtColor` | OpenCV 默认 BGR，需转 RGB 供 Qt 显示 |
+| **病灶检测** | `HoughCircles` | 霍夫圆检测，`dp=2, minDist=rows/8, param1=200, param2=100` |
+| **图像直出** | `Mat.data` ⇄ `QImage` | 共享底层数据指针，零拷贝 |
+| **多线程处理** | 自研 `ThreadPool` + 跨线程信号 | 图像处理移入后台线程池，queued 信号回传，UI 不卡 |
+| **照片存储** | Base64 → `QByteArray::fromBase64` | 二进制照片以 Base64 存库，运行时解码 |
+| **实时时钟** | `QTimer` + `QLCDNumber` | 1000ms 定时刷新年月日与时间 |
+| **数据库自启** | `QProcess::start("mysqld.exe")` | 连接失败时自动拉起 MySQL 服务并重连 |
+| **部署打包** | 手工收集 DLL + 插件 | `deploy/` 目录实现自包含分发 |
+
+### 8.1 多线程图像处理（自研线程池）
+
+CT 影像处理（灰度化、高斯模糊、霍夫圆检测）是 CPU 密集操作，原实现放在主线程并用
+`processEvents()` 空转模拟进度，会导致界面卡顿。现已重构为 **自研线程池 + 跨线程信号**：
+
+```cpp
+// threadpool.cpp 核心：生产者-消费者，condition_variable 同步
+void ThreadPool::workerLoop() {
+    for (;;) {
+        std::function<void()> task;
+        {
+            std::unique_lock<std::mutex> lock(m_mutex);
+            m_cv.wait(lock, [this]{ return m_stop.load() || !m_tasks.empty(); });
+            if (m_tasks.empty()) return;   // 停止且队列空 -> 退出
+            task = std::move(m_tasks.front());
+            m_tasks.pop();
+        }
+        try { task(); } catch (...) {}     // 异常不能杀死 worker 线程
+    }
+}
+
+// 主线程投递任务，结果通过 queued 信号回传（Qt 规定 UI 只能主线程操作）
+m_pool->enqueue([this, path]() {
+    QImage result = processCtImage(path, [this](int v){ emit ctProgressChanged(v); });
+    emit ctProcessFinished(result);        // worker 线程 -> 主线程
+});
+```
+
+| 技术点 | 说明 |
+|--------|------|
+| 自研 `ThreadPool` | `std::thread` + `std::mutex` + `std::condition_variable` + `std::atomic<bool>` |
+| 任务同步 | 条件变量谓词 `m_stop || !m_tasks.empty()` 防止虚假唤醒与丢失唤醒 |
+| 异常安全 | 任务异常被捕获，worker 线程不会因此终止 |
+| 跨线程 UI 更新 | queued connection 把进度/结果投递回主线程 |
+| 生命周期 | `QImage` 跨线程回传前必须 `.copy()` 深拷贝，避免局部 `Mat` 释放后悬垂 |
+| 优雅关闭 | `shutdown()` 置停止标志 + `join()`，等待剩余任务执行完 |
 
 ---
 
@@ -664,64 +287,13 @@ INCLUDEPATH += $$PWD/packages/mysql_lib/x64_8.1/include
 
 | 优先级 | 项目 | 说明 |
 |--------|------|------|
-| 高 | 数据库安全 | 账号密码明文硬编码，应改为配置文件或环境变量 |
-| 高 | 索引越界风险 | `onTableSelectChange` 按固定列索引取值，表结构变化即崩溃，应改为按字段名查询 |
-| 高 | 姓名关联 | 用姓名关联两张表，重名患者会导致数据错乱，应使用主键/医保卡编号关联 |
-| 高 | SQL 注入 | 当前用 `QSqlTableModel` 无显式拼接，但若扩展手写 SQL 需使用参数绑定 |
-| 中 | 空表处理 | 数据库无数据时 `model->index()` 无效，`onTableSelectChange(0)` 可能崩溃 |
-| 中 | 硬编码路径 | 图片路径、`mysqld.exe` 路径均硬编码，缺乏可移植性 |
-| 中 | 诊断逻辑 | 霍夫圆检测参数固定，对不同 CT 影像适应性差，结论为固定文案而非真实医学判断 |
-| 中 | 假耗时 | 用 `processEvents()` + 空循环模拟进度，应替换为真实处理进度或后台线程 |
-| 低 | 多线程 | 图像处理在主线程执行，大图会卡顿 UI，应移至 `QThread`/`QtConcurrent` |
-| 低 | 配置文件 | 无 ini/json 配置，所有参数硬编码 |
-| 低 | 界面自适应 | 控件使用绝对坐标（`geometry`），高 DPI / 拉伸窗口时布局错乱 |
-| 低 | 字体依赖 | 使用"华文楷体/华文仿宋"等字体，目标机器缺字体时显示异常 |
-
----
-
-## 知识索引
-
-本项目涉及的 **Qt / C++ / OpenCV / MySQL** 核心知识点速查：
-
-```
-┌─ Qt 框架基础
-│  ├─ QApplication / QMainWindow
-│  ├─ 事件循环 (a.exec / processEvents)
-│  ├─ 元对象系统 (Q_OBJECT / moc / signals / slots)
-│  ├─ connectSlotsByName 自动连接
-│  └─ 容器 QString / QByteArray / QVariant
-├─ Qt GUI 控件
-│  ├─ QLabel (setPixmap / setText / scaledContents)
-│  ├─ QTableView / QTreeWidget / QTabWidget
-│  ├─ QRadioButton / QComboBox / QSpinBox / QLineEdit
-│  ├─ QProgressBar / QLCDNumber / QTimeEdit
-│  └─ QPushButton (clicked 信号)
-├─ Qt SQL
-│  ├─ QSqlDatabase (addDatabase / open / lastError)
-│  ├─ QMYSQL 驱动 (qsqlmysql.dll)
-│  ├─ QSqlTableModel (setTable / select)
-│  └─ QModelIndex (index / data)
-├─ Qt 文件与流
-│  ├─ QFileDialog (getOpenFileName)
-│  ├─ QFile / QBuffer / QIODevice
-│  └─ QByteArray::fromBase64
-├─ Qt 图像
-│  ├─ QImage (Format_RGB888 / save)
-│  ├─ QPixmap (fromImage / loadFromData / scaled)
-│  └─ Mat ⇄ QImage 共享数据指针
-├─ OpenCV
-│  ├─ Mat / imread / imwrite
-│  ├─ cvtColor (BGR2RGB / RGB2GRAY)
-│  ├─ GaussianBlur 高斯模糊
-│  ├─ HoughCircles 霍夫圆检测
-│  ├─ circle 绘制
-│  └─ Scalar / Point / Vec3f
-├─ 进程与定时
-│  ├─ QProcess (start)
-│  ├─ QTimer (setInterval / start / timeout)
-│  └─ QTime (currentTime / elapsed)
-└─ 预处理器 / 构建
-   ├─ qmake (QT += / SOURCES / HEADERS / FORMS)
-   ├─ INCLUDEPATH / LIBS 第三方库链接
-   └─ $$PWD 项目根目录宏
-```
+| 高 | 数据库安全 | 账号密码明文硬编码，应改用配置文件 |
+| 高 | 表关联方式 | 用姓名关联两张表，重名会错乱，应使用主键/医保卡编号 |
+| 高 | 列索引硬编码 | 按固定列索引取值，表结构变化即崩溃 |
+| 高 | 空表容错 | 数据库无数据时 `onTableSelectChange(0)` 可能越界崩溃 |
+| 中 | 硬编码路径 | 图片路径、`mysqld.exe` 路径缺乏可移植性 |
+| 中 | 诊断逻辑 | 霍夫圆参数固定、结论为固定文案，非真实医学判断 |
+| ~~中~~ | ~~假耗时~~ | ✅ 已解决：移除 `processEvents()` 空循环，进度条反映真实处理阶段 |
+| ~~低~~ | ~~图像处理线程~~ | ✅ 已解决：自研 `ThreadPool` 后台处理 + queued 信号回传 UI |
+| 低 | 部署自动化 | 依赖 DLL 手工收集易遗漏，建议用 `windeployqt` 自动打包 |
+| 低 | 界面自适应 | 控件使用绝对坐标，高 DPI / 拉伸窗口时布局错乱 |
